@@ -1,3 +1,5 @@
+# https://swizec.com/blog/using-dynamodb-streams-with-the-serverless-framework/
+
 service: dynamodb-starter-sls
 frameworkVersion: '3'
 
@@ -23,20 +25,36 @@ provider:
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
+            # Streams
+            - dynamodb:DescribeStream
+            - dynamodb:GetRecords
+            - dynamodb:GetShardIterator
+            - dynamodb:ListStreams
           Resource:
-            - Fn::GetAtt: [ UsersTable, Arn ]
+            - Fn::GetAtt: [ StreamingTable, Arn ]
   environment:
     USERS_TABLE: ${self:custom.tableName}
 
 functions:
   api:
-    handler: handler.handler
+    handler: functions/handler.handler
     events:
       - httpApi: '*'
 
+  streamTrigger:
+    handler: functions/streamTrigger.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+          # Make sure we are referencing the Stream Arn -2 hours KEK
+            Fn::GetAtt: [ StreamingTable, StreamArn ]
+          batchSize: 5
+          startingPosition: LATEST
+
 resources:
   Resources:
-    UsersTable:
+    StreamingTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
@@ -47,6 +65,8 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tableName}
+        StreamSpecification:
+          StreamViewType: 'NEW_AND_OLD_IMAGES'
         Tags:
           - Key: 'auto-delete'
             Value: 'no'
