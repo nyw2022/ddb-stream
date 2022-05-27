@@ -4,6 +4,8 @@
   "description": "",
   "dependencies": {
     "express": "^4.17.1",
-    "serverless-http": "^2.7.0"
+    "serverless-dynamodb-local": "^0.2.40",
+    "serverless-http": "^2.7.0",
+    "serverless-offline": "^8.8.0"
   }
 }
