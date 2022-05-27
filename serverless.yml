@@ -4,8 +4,13 @@ service: dynamodb-starter-sls
 frameworkVersion: '3'
 
 plugins:
+# Testing package size reduction with webpack
+  - serverless-webpack
   - serverless-dynamodb-local
   - serverless-offline
+# package each lambda files independently
+package:
+  individually: true
 
 custom:
   tableName: 'streaming-table-${sls:stage}'
